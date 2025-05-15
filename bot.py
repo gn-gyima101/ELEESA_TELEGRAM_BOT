@@ -1,4 +1,3 @@
-
 import os
 import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -10,7 +9,7 @@ from telegram.ext import (
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Set this in Render e.g., https://your-app-name.onrender.com
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -57,22 +56,14 @@ async def main():
     app.add_handler(CommandHandler("request", request_material))
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    await app.initialize()
-    await app.start()
-
-    # Set webhook
-    await app.bot.set_webhook(WEBHOOK_URL)
-
-    # Start listening for webhooks
-    await app.updater.start_webhook(
+    await app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 8000)),
-        url_path="",
         webhook_url=WEBHOOK_URL,
     )
 
-    print("Bot running via webhook...")
-    await asyncio.Event().wait()
-
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
