@@ -56,19 +56,25 @@ async def main():
     app.add_handler(CommandHandler("request", request_material))
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    await app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
-        webhook_url=WEBHOOK_URL,
-    )
+    await app.initialize()
+    await app.bot.set_webhook(WEBHOOK_URL)
+    await app.start()
+
+    print("🚀 Bot is running on webhook...")
+
+    try:
+        await asyncio.Event().wait()  # Keeps running
+    finally:
+        await app.shutdown()
+        await app.stop()
 
 if __name__ == "__main__":
     import sys
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
+
 
 
 
