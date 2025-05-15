@@ -1,9 +1,16 @@
-# Full-featured Telegram bot using polling (sample layout)
+
 import os
+import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes
+)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Set this in Render e.g., https://your-app-name.onrender.com
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -32,7 +39,6 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data.endswith("sem1") or data.endswith("sem2"):
         level, semester = data.split("_")
-        # Simulate sending files and drive link
         await query.edit_message_text(f"Here are the materials for {level.upper()} {semester.upper()}")
         await query.message.reply_text("Sending all course files...")
         await query.message.reply_document(open("sample_course_file.pdf", "rb"))
@@ -44,9 +50,29 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def request_material(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Please send the name of the course or material you're requesting.")
 
-if __name__ == "__main__":
+async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("request", request_material))
     app.add_handler(CallbackQueryHandler(handle_callback))
-    app.run_polling()
+
+    await app.initialize()
+    await app.start()
+
+    # Set webhook
+    await app.bot.set_webhook(WEBHOOK_URL)
+
+    # Start listening for webhooks
+    await app.updater.start_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8000)),
+        url_path="",
+        webhook_url=WEBHOOK_URL,
+    )
+
+    print("Bot running via webhook...")
+    await asyncio.Event().wait()
+
+if __name__ == "__main__":
+    asyncio.run(main())
